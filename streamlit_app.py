@@ -10,7 +10,23 @@ from nltk.stem import WordNetLemmatizer
 from sklearn.metrics.pairwise import cosine_similarity
 from pypdf import PdfReader
 import docx
+import nltk
 
+# تنزيل بيانات NLTK المطلوبة للتقطيع التلقائي
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
+try:
+    nltk.data.find('tokenizers/punkt_tab')
+except LookupError:
+    nltk.download('punkt_tab')
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
 # ---------------------------------------------------------
 # 1. إعدادات الصفحة وتحميل موارد NLTK
 # ---------------------------------------------------------
