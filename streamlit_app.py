@@ -1,6 +1,6 @@
 import streamlit as st
-import pickle
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 from pypdf import PdfReader
@@ -69,34 +69,29 @@ with col2:
 
     cv_text = st.text_area("Or edit/paste Resume text here:", value=uploaded_text, height=180, placeholder="CV text will appear here automatically after upload...")
 
-@st.cache_resource
-def load_vectorizer():
-    try:
-        with open('tfidf_vectorizer.pkl', 'rb') as f:
-            return pickle.load(f)
-    except:
-        from sklearn.feature_extraction.text import TfidfVectorizer
-        return TfidfVectorizer()
-
-vectorizer = load_vectorizer()
-
 st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("Calculate Match Rate 🚀", use_container_width=True):
     if job_desc.strip() and cv_text.strip():
-        tfidf_matrix = vectorizer.fit_transform([job_desc, cv_text])
-        score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0] * 100
+        # Initialize a clean vectorizer to prevent pruning errors
+        vectorizer = TfidfVectorizer(stop_words='english')
+        
+        try:
+            tfidf_matrix = vectorizer.fit_transform([job_desc, cv_text])
+            score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0] * 100
 
-        st.markdown("---")
-        st.subheader("📊 Matching Analysis Results:")
+            st.markdown("---")
+            st.subheader("📊 Matching Analysis Results:")
 
-        if score >= 70:
-            st.success(f"🎯 Match Rate: {score:.2f}% (Excellent Match)")
-        elif score >= 40:
-            st.info(f"⚡ Match Rate: {score:.2f}% (Moderate Match)")
-        else:
-            st.warning(f"⚠️ Match Rate: {score:.2f}% (Low Match)")
+            if score >= 70:
+                st.success(f"🎯 Match Rate: {score:.2f}% (Excellent Match)")
+            elif score >= 40:
+                st.info(f"⚡ Match Rate: {score:.2f}% (Moderate Match)")
+            else:
+                st.warning(f"⚠️ Match Rate: {score:.2f}% (Low Match)")
 
-        st.progress(int(score))
+            st.progress(int(score))
+        except ValueError:
+            st.error("Could not process text. Please ensure both fields contain meaningful words/text.")
     else:
         st.error("Please enter both Job Description and Resume content first!")
