@@ -3,6 +3,8 @@ import pickle
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
+from pypdf import PdfReader
+import docx
 
 # Download NLTK resources automatically
 try:
@@ -24,19 +26,48 @@ except LookupError:
 st.set_page_config(page_title="TalentMatch - CV Matcher", layout="wide", page_icon="📄")
 
 st.title("📄 TalentMatch - Resume & Job Description Matcher")
-st.write("Enter the Job Description and Resume text below to calculate the match percentage.")
+st.write("Enter the Job Description and upload or paste the Resume to calculate the match percentage.")
 
 st.markdown("---")
+
+# Function to extract text from PDF/DOCX
+def extract_text_from_file(file):
+    text = ""
+    if file.name.endswith('.pdf'):
+        pdf_reader = PdfReader(file)
+        for page in pdf_reader.pages:
+            extracted = page.extract_text()
+            if extracted:
+                text += extracted + "\n"
+    elif file.name.endswith('.docx'):
+        doc = docx.Document(file)
+        for para in doc.paragraphs:
+            text += para.text + "\n"
+    elif file.name.endswith('.txt'):
+        text = str(file.read(), 'utf-8')
+    return text
 
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("📋 Job Description")
-    job_desc = st.text_area("Paste Job Description here:", height=220, placeholder="e.g., Looking for a Data Engineer skilled in Python, SQL...")
+    job_desc = st.text_area("Paste Job Description here:", height=260, placeholder="e.g., Looking for a Data Engineer skilled in Python, SQL...")
 
 with col2:
     st.subheader("📝 Resume / CV Content")
-    cv_text = st.text_area("Paste Resume content here:", height=220, placeholder="e.g., 3 years of experience in data analysis using Python...")
+    
+    # Upload file directly from Desktop
+    uploaded_file = st.file_uploader("Upload CV from Desktop (PDF, DOCX, TXT):", type=['pdf', 'docx', 'txt'])
+    
+    uploaded_text = ""
+    if uploaded_file is not None:
+        try:
+            uploaded_text = extract_text_from_file(uploaded_file)
+            st.success("✅ File uploaded and text extracted successfully!")
+        except Exception as e:
+            st.error("Error reading file. Please paste text manually or try another file.")
+
+    cv_text = st.text_area("Or edit/paste Resume text here:", value=uploaded_text, height=180, placeholder="CV text will appear here automatically after upload...")
 
 @st.cache_resource
 def load_vectorizer():
