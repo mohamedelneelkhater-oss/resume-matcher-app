@@ -132,5 +132,10 @@ if st.button("🚀 حساب نسبة المطابقة", use_container_width=True
         # حساب نسبة التشابه
         similarity_score = cosine_similarity(vectors[0], vectors[1])[0][0] * 100
         
-        st.success(f"🎯 **نسبة المطابقة بين السيرة الذاتية والوظيفة:** `{similarity_score:.2f}%`")
+       if score >= 70:
+    st.success(f"🎯 Match Rate: {score:.2f}% (Excellent Match)")
+elif score >= 40:
+    st.info(f"⚡ Match Rate: {score:.2f}% (Moderate Match)")
+else:
+    st.warning(f"⚠️ Match Rate: {score:.2f}% (Low Match)")
         
